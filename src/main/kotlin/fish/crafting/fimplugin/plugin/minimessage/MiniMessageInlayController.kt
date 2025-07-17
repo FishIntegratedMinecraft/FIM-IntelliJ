@@ -201,19 +201,32 @@ class MiniMessageInlayController {
             }
         }
 
-        //If there is no inlay, or it needs to update position, make a new one!
-        val oldFocused = getAndReplace(expression)
-        blockInlay?.dispose()
+        onEDTorNow(bgtTracker){
+            //If there is no inlay, or it needs to update position, make a new one!
+            val oldFocused = getAndReplace(expression)
+            blockInlay?.dispose()
 
-        removeInlineInlay(editor, expression, bgtTracker = bgtTracker)
+            removeInlineInlay(editor, expression, bgtTracker = bgtTracker)
 
-        var appliedRenderer: MiniMessageRenderer? = null
-        if(expression.shouldOnlyRenderIfValid()){
-            val hadTags = AtomicBoolean(false)
-            val parseOrLegacy = MiniMessageParser.parseOrLegacy(text, hadTags)
+            var appliedRenderer: MiniMessageRenderer? = null
+            if(expression.shouldOnlyRenderIfValid()){
+                val hadTags = AtomicBoolean(false)
+                val parseOrLegacy = MiniMessageParser.parseOrLegacy(text, hadTags)
 
-            if(hadTags.get()){
-                appliedRenderer = MiniMessageRenderer(parseOrLegacy, text)
+                if(hadTags.get()){
+                    appliedRenderer = MiniMessageRenderer(parseOrLegacy, text)
+                    blockInlay = editor.inlayModel.addBlockElement(
+                        expression.endOffset,
+                        false,
+                        false,
+                        100,
+                        appliedRenderer
+                    )
+                }else{
+                    blockInlay = null
+                }
+            }else{
+                appliedRenderer = MiniMessageRenderer(text)
                 blockInlay = editor.inlayModel.addBlockElement(
                     expression.endOffset,
                     false,
@@ -221,24 +234,13 @@ class MiniMessageInlayController {
                     100,
                     appliedRenderer
                 )
-            }else{
-                blockInlay = null
             }
-        }else{
-            appliedRenderer = MiniMessageRenderer(text)
-            blockInlay = editor.inlayModel.addBlockElement(
-                expression.endOffset,
-                false,
-                false,
-                100,
-                appliedRenderer
-            )
-        }
 
-        attachObfuscatedTimer(appliedRenderer, blockInlay)
+            attachObfuscatedTimer(appliedRenderer, blockInlay)
 
-        if(oldFocused != null){
-            updateInlineFor(editor, oldFocused, false)
+            if(oldFocused != null){
+                updateInlineFor(editor, oldFocused, false)
+            }
         }
     }
 
