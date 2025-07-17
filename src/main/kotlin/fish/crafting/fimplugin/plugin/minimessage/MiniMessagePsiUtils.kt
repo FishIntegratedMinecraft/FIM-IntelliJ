@@ -8,6 +8,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiBinaryExpression
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiCodeBlock
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiExpressionList
@@ -26,6 +27,7 @@ import fish.crafting.fimplugin.plugin.util.javakotlin.isYaml
 import io.ktor.util.reflect.instanceOf
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.js.parser.sourcemaps.JsonString
+import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
@@ -88,12 +90,20 @@ fun PsiElement.getParentLiteral(): PsiElement? {
 fun PsiElement.visitExpressions(run: (PsiElement) -> Unit) {
     if(language.isJava) {
         accept(object : JavaRecursiveElementVisitor() {
+            override fun visitCodeBlock(block: PsiCodeBlock) {
+                if (!block.isValid || block.containingFile == null) return
+                super.visitCodeBlock(block)
+            }
             override fun visitLiteralExpression(expression: PsiLiteralExpression) {
                 run.invoke(expression)
             }
         })
     }else if(language.isKotlin){
         accept(object : KtTreeVisitorVoid() {
+            override fun visitBlockExpression(expression: KtBlockExpression) {
+                if (!expression.isValid || expression.containingFile == null) return
+                super.visitBlockExpression(expression)
+            }
             override fun visitStringTemplateExpression(expression: KtStringTemplateExpression) {
                 run.invoke(expression)
             }
