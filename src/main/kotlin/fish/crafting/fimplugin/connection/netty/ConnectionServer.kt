@@ -164,13 +164,8 @@ class ConnectionServer internal constructor() {
             if(connections.size == 1) { //Wow! First Connection!
                 val d = System.currentTimeMillis() - lastRefreshedGutters
 
-                val success = if(d > 15_000){ //15s
+                if(d > 15_000){ //15s
                     EditorUtil.refreshGutters()
-                }else{
-                    false
-                }
-
-                if(success){
                     lastRefreshedGutters = System.currentTimeMillis()
                 }
             }
