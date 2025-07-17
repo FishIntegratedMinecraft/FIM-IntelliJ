@@ -25,10 +25,8 @@ object PacketManager {
     }
 
     fun handleReceivedPacket(handler: MinecraftHandlerInstance, buf: ByteBuf) {
-        println("Received a packet!")
         ByteBufInputStream(buf).use { stream ->
             val packetID = stream.readUTF()
-            println("Is of type '$packetID'")
 
             val inPacket: InPacket? = packetMap[packetID]
             inPacket?.readAndExecute(handler, stream)

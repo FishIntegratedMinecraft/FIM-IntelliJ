@@ -69,7 +69,6 @@ class MiniMessageInlayController {
     }
 
     fun dispose(editor: Editor) {
-        println("Disposed!")
         clearCaches()
         blockInlay?.dispose()
         blockInlay = null
