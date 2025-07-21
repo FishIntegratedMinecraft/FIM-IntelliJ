@@ -1,8 +1,13 @@
 package fish.crafting.fimplugin.connection.netty
 
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.psi.PsiManager
 import fish.crafting.fimplugin.connection.focuser.ProgramFocuser
 import fish.crafting.fimplugin.connection.packets.I2FConfirmPacket
+import fish.crafting.fimplugin.connection.packets.I2FLangPacket
 import fish.crafting.fimplugin.connection.packetsystem.PacketManager
 import io.ktor.util.date.getTimeMillis
 import io.netty.buffer.ByteBuf
@@ -58,6 +63,8 @@ class MinecraftHandlerInstance(val channel: Channel) : SimpleChannelInboundHandl
         thisLogger().info("Successfully initialized connection with client ID '$uuid'!")
         this.uuid = uuid
         this.windowFocuser = focuser
+
+        I2FLangPacket.sendCurrentFile(this)
     }
 
     private fun endConnection() {
