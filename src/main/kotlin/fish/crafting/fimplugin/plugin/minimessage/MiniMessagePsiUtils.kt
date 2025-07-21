@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.js.parser.sourcemaps.JsonString
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 import org.jetbrains.kotlin.psi.KtValueArgument
@@ -150,15 +151,35 @@ private fun PsiElement.resolveMethodFromLiteral(): PsiMethod? {
         val call = exprList.parent as? PsiMethodCallExpression ?: return null
         return call.resolveMethod()
     }else if(this.language.isKotlin){
-        val valArg = parent as? KtValueArgument ?: return null
-        val exprList = valArg.parent as? KtValueArgumentList ?: return null
-        val call = exprList.parent as? KtCallExpression ?: return null
+        val parentMethod = ktLookForParentMethod(this)
+        if(parentMethod != null) return parentMethod
 
-        val uElement = call.toUElement() as? UCallExpression ?: return null
-        return uElement.resolve()
+        //return ktLookForExtensionMethod(this)
     }
 
     return null
+}
+
+private fun ktLookForExtensionMethod(element: PsiElement): PsiMethod? {
+    val dotQualified = element.parent as? KtDotQualifiedExpression ?: return null
+
+    for (psiElement in dotQualified.children) {
+        if(psiElement is KtCallExpression) {
+            val uElement = psiElement.toUElement() as? UCallExpression ?: continue
+            return uElement.resolve()
+        }
+    }
+
+    return null
+}
+
+private fun ktLookForParentMethod(element: PsiElement): PsiMethod? {
+    val valArg = element.parent as? KtValueArgument ?: return null
+    val exprList = valArg.parent as? KtValueArgumentList ?: return null
+    val call = exprList.parent as? KtCallExpression ?: return null
+
+    val uElement = call.toUElement() as? UCallExpression ?: return null
+    return uElement.resolve()
 }
 
 /**
