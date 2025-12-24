@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.markup.TextAttributes
 import fish.crafting.fimplugin.plugin.minimessage.parser.MiniMessageParser
 import fish.crafting.fimplugin.plugin.minimessage.parser.TextComponent
@@ -76,11 +77,13 @@ class MiniMessageRenderer(private val components: ArrayList<TextComponent>,
 
         var styledFont: Font? = null
         for (component in components) {
-            val baseFont = if (component.styling.bold) {
+            var baseFont = if (component.styling.bold) {
                 MinecraftFont.bold
             } else {
                 MinecraftFont.font
             }
+
+            baseFont = validateFont(editor, baseFont, component)
 
             var text = component.content
 
@@ -199,5 +202,12 @@ class MiniMessageRenderer(private val components: ArrayList<TextComponent>,
         if (style.bold) styleFlags = styleFlags or Font.BOLD
         if (style.italic) styleFlags = styleFlags or Font.ITALIC
         return base.deriveFont(styleFlags, fontSize.toFloat() + 3f)
+    }
+
+    private fun validateFont(editor: Editor, base: Font, component: TextComponent): Font {
+        if (base.canDisplayUpTo(component.content) != -1) {
+            return editor.colorsScheme.getFont(EditorFontType.PLAIN)
+        }
+        return base
     }
 }
